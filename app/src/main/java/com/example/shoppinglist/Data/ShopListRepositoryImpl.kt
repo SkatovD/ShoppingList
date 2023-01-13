@@ -1,33 +1,41 @@
 package com.example.shoppinglist.Data
 
-import android.app.Application
-import com.example.shoppinglist.Data.DataBase.AppDataBase
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.example.shoppinglist.Domain.ShopItem
 import com.example.shoppinglist.Domain.ShopListRepository
+import java.lang.RuntimeException
 
 object ShopListRepositoryImpl : ShopListRepository {
-
-    private val shopList = mutableListOf<ShopItem>()
-
     private var autoIncrementId = 0
-    private val db: AppDataBase = AppDataBase.getInstance(Application())
+    private var shopList = mutableListOf<ShopItem>()
+    private val shopListLD = MutableLiveData<List<ShopItem>>()
+
+    init {
+        for (i in 0 until 10) {
+            val item = ShopItem("name $i", i, true)
+            addItem(item)
+        }
+    }
 
     override fun addItem(shopItem: ShopItem) {
+
         if (shopItem.id == ShopItem.UNDEFINED_ID) {
             shopItem.id = autoIncrementId++
 
         }
-        db.shopListDao().addItem(shopItem)
-
+        shopList.add(shopItem)
+        updateList()
     }
 
-    override fun getShopList(): List<ShopItem> {
+    override fun getShopList(): LiveData<List<ShopItem>> {
 
-        return db.shopListDao().getShopList()
+        return shopListLD
     }
 
     override fun deleteItem(shopItem: ShopItem) {
-        db.shopListDao().deleteItem(shopItem)
+        shopList.remove(shopItem)
+        updateList()
     }
 
     override fun editItem(shopItem: ShopItem) {
@@ -37,6 +45,11 @@ object ShopListRepositoryImpl : ShopListRepository {
     }
 
     override fun getItemById(shopItemId: Int): ShopItem {
-        return db.shopListDao().getItem(shopItemId)
+        return shopList.find { it.id == shopItemId }
+            ?: throw RuntimeException("Element with id $shopItemId not found")
+    }
+
+    private fun updateList() {
+        shopListLD.value = shopList.toList()
     }
 }
