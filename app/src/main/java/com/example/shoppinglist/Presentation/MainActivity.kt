@@ -12,6 +12,7 @@ import com.example.shoppinglist.R
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class MainActivity : AppCompatActivity(), ShopItemFragment.OnEditingFinishedListener {
+
     private lateinit var viewModel: MainViewModel
     private lateinit var shopListAdapter: RVAdapter
     private var shopItemContainer: FragmentContainerView? = null
